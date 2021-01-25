@@ -53,27 +53,39 @@ function handleRequest(req, res) {
 // WebSocket work with the HTTP server
 var io = require('socket.io')(server);
 
+// for storing client data
+var currentConnections = {};
 // Register a callback function to run when we have an individual connection
 // This is run for each user that connects
 // We are given a websocket object in our function
-io.on('connection', function(socket) {
-    console.log("User " + socket.id + " has joined the channel.");
+io.on('connection', function(client) {
+    console.log("User " + client.id + " has joined the channel.");
+    currentConnections[client.id] = {};
+
+    // Receieves data when a user initializes
+    client.on('currentClientData', function(data){
+      console.log(data);
+      currentConnections[client.id].selectedColor = data.selectedColor;
+    });
 
     // Receives data when a user sends data to 'mouse' event
-    socket.on('mouse', function(data) {
+    client.on('mouse', function(data) {
         console.log("Received: 'mouse' " + data.x + " " + data.y);
         // Broadcasts data to other users
-        socket.broadcast.emit('mouse', data);
+        client.broadcast.emit('mouse', data);
     });
 
     // Receives msg when a user sends msg to 'chat message' event
-    socket.on('chat message', function(msg) {
+    client.on('chat message', function(msg) {
         io.emit('chat message', msg);
         //console.log('message:' + msg);
+        currentConnections[client.id].msg = msg;
+        console.log(currentConnections);
     });
 
     // Callback function that run when a user disconnects
-    socket.on('disconnect', function() {
-        console.log("User " + socket.id + " has left the channel.");
+    client.on('disconnect', function() {
+      console.log("User " + client.id + " has left the channel.");
+      delete currentConnections[client.id];
     });
 });
