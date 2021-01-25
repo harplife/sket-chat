@@ -59,11 +59,17 @@ var io = require('socket.io')(server);
 io.on('connection', function(socket) {
     console.log("User " + socket.id + " has joined the channel.");
 
-    // Receives data when a user sends data to 'mouse' channel
+    // Receives data when a user sends data to 'mouse' event
     socket.on('mouse', function(data) {
         console.log("Received: 'mouse' " + data.x + " " + data.y);
         // Broadcasts data to other users
         socket.broadcast.emit('mouse', data);
+    });
+
+    // Receives msg when a user sends msg to 'chat message' event
+    socket.on('chat message', function(msg) {
+        io.emit('chat message', msg);
+        //console.log('message:' + msg);
     });
 
     // Callback function that run when a user disconnects

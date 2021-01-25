@@ -2,22 +2,41 @@
 // Start a socket connection to the server
 var socket = io();
 
+var messages = document.getElementById('messages');
+var form = document.getElementById('form');
+var input = document.getElementById('input');
+
+form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (input.value) {
+    socket.emit('chat message', input.value);
+    input.value = '';
+    }
+});
+
+socket.on('chat message', function(msg) {
+    var item = document.createElement('li');
+    item.textContent = msg;
+    messages.appendChild(item);
+    window.scrollTo(0, document.body.scrollHeight);
+});
+
+// Callback function for when data enters 'mouse' channel
+socket.on('mouse', function(data) {
+    console.log("Got: " + data.x + " " + data.y);
+
+    // What a user draws is shown to others as blue circles
+    fill(data.rgb);
+    noStroke();
+    ellipse(data.x, data.y, 80, 80);
+});
+
 function setup() {
     var canvasWidth = 800;
     var canvasHeight = 600;
     var myCanvas = createCanvas(canvasWidth, canvasHeight);
     myCanvas.parent('canvasDiv');
     background(0);
-
-    // Callback function for when data enters 'mouse' channel
-    socket.on('mouse', function(data) {
-        console.log("Got: " + data.x + " " + data.y);
-
-        // What a user draws is shown to others as blue circles
-        fill(data.rgb);
-        noStroke();
-        ellipse(data.x, data.y, 80, 80);
-    });
 }
 
 function draw() {
